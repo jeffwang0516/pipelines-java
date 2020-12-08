@@ -3,20 +3,33 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
+
 trigger:
-- main
+- master
+- development
 
-pool:
-  vmImage: 'ubuntu-16.04'
+stages:
+- stage: build
+  jobs:
+  - job:
+    pool:
+      vmImage: 'ubuntu-16.04'
+    steps:
+    - task: Maven@3
+      inputs:
+        mavenPomFile: 'pom.xml'
+        mavenOptions: '-Xmx3072m'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.8'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        goals: 'package'
 
-steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+- stage: deploy
+  condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/development'))
+  jobs:
+  - job: B1
+    steps:
+    - script: echo "Running deploy........"
+ 
