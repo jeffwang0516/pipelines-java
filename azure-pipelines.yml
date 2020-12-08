@@ -26,6 +26,7 @@ stages:
         testResultsFiles: '**/surefire-reports/TEST-*.xml'
         goals: 'package'
 
+
 - stage: deploy
   condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/development'))
   jobs:
