@@ -26,10 +26,26 @@ stages:
         testResultsFiles: '**/surefire-reports/TEST-*.xml'
         goals: 'package'
 
+
 - stage: deploy
   condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/development'))
   jobs:
-  - job: B1
-    steps:
-    - script: echo "Running deploy........"
+  - deployment: DeployWeb
+    displayName: deploy Web App
+    pool:
+      vmImage: 'Ubuntu-latest'
+    # creates an environment if it doesn't exist
+    environment: 'smarthotel-dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              action: deploy
+              namespace: $(k8sNamespace)
+              manifests: $(System.ArtifactsDirectory)/manifests/*
+              imagePullSecrets: $(imagePullSecret)
+              containers: $(containerRegistry)/$(imageRepository):$(tag)
  
